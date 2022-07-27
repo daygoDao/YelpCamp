@@ -1,8 +1,8 @@
 const express = require("express");
 const path = require("path");
 const mongoose = require("mongoose");
-const ejsMate = require('ejs-mate')
-const methodOverride = require('method-override')
+const ejsMate = require("ejs-mate");
+const methodOverride = require("method-override");
 const Campground = require("./models/campground");
 
 mongoose.connect("mongodb://localhost:27017/yelp-camp", {
@@ -18,11 +18,11 @@ db.once("open", () => {
 
 const app = express();
 
-app.engine('ejs', ejsMate);
+app.engine("ejs", ejsMate);
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
-app.use(methodOverride('_method'))
+app.use(methodOverride("_method"));
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
@@ -38,10 +38,14 @@ app.get("/campgrounds/new", (req, res) => {
   res.render("campgrounds/new");
 });
 
-app.post("/campgrounds", async (req, res) => {
-  const campground = new Campground(req.body.campground);
-  await campground.save();
-  res.redirect("/campgrounds/" + campground._id);
+app.post("/campgrounds", async (req, res, next) => {
+  try {
+    const campground = new Campground(req.body.campground);
+    await campground.save();
+    res.redirect("/campgrounds/" + campground._id);
+  } catch (err) {
+    next(err);
+  }
 });
 
 app.get("/campgrounds/:id", async (req, res) => {
@@ -54,18 +58,26 @@ app.get("/campgrounds/:id/edit", async (req, res) => {
   res.render("campgrounds/edit", { campground });
 });
 
-app.put('/campgrounds/:id', async (req, res) => {
+app.put("/campgrounds/:id", async (req, res) => {
   const { id } = req.params;
-  const campground = await Campground.findByIdAndUpdate(id, {...req.body.campground}, { runValidators: true, new: true })
-  res.redirect(`/campgrounds/${campground._id}`)
+  const campground = await Campground.findByIdAndUpdate(
+    id,
+    { ...req.body.campground },
+    { runValidators: true, new: true }
+  );
+  res.redirect(`/campgrounds/${campground._id}`);
   // res.send('ayooyo')
-})
+});
 
-app.delete('/campgrounds/:id', async (req, res) => {
-  const {id} = req.params;
+app.delete("/campgrounds/:id", async (req, res) => {
+  const { id } = req.params;
   await Campground.findByIdAndDelete(id);
-  res.redirect('/campgrounds')
-})
+  res.redirect("/campgrounds");
+});
+
+app.use((err, req, res, next) => {
+  res.send("something went wrong");
+});
 
 app.listen(3000, () => {
   console.log("serving on port 3000");
