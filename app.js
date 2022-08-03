@@ -2,8 +2,8 @@ const express = require("express");
 const path = require("path");
 const mongoose = require("mongoose");
 const ejsMate = require("ejs-mate");
-const Joi = require("joi");
 const wrapAsync = require("./utils/wrapAsync");
+const {campgroundSchema} = require('./schemas.js')
 const ExpressError = require("./utils/ExpressError");
 const methodOverride = require("method-override");
 const Campground = require("./models/campground");
@@ -30,15 +30,6 @@ app.use(methodOverride("_method"));
 app.use(express.urlencoded({ extended: true }));
 
 const validateCampground = (req, res, next) => {
-  const campgroundSchema = Joi.object({
-    campground: Joi.object({
-      title: Joi.string().required(),
-      price: Joi.number().required().min(0),
-      image: Joi.string().required(),
-      location: Joi.string().required(),
-      description: Joi.string().required(),
-    }).required()
-  })
   const { error } = campgroundSchema.validate(req.body)
   console.log(error)
   if(error) {
